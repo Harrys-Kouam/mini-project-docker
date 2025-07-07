@@ -1,0 +1,34 @@
+version: '3.9'  # Always specify the Compose file version for compatibility
+
+services: 
+  # Define the "webpage" container (frontend PHP Apache server)
+  webpage: 
+    container_name: webpage  # Sets the explicit name of the container
+    image: php:apache        # The image used to build/run this service
+    environment:             # Set environment variables inside the container
+      - USERNAME=toto
+      - PASSWORD=python
+    ports: 
+      - "80:80"              # Map host port 80 to container port 80
+    networks:
+      - student-list-network # Connect this service to the custom network
+    depends_on:
+      - api                  # Ensure "api" starts before "webpage"
+    volumes:
+      - ./website:/var/www/html  # Mount local folder to container for live code
+
+  # Define the "api" container, which "webpage" depends on
+  api: 
+    container_name: api      # Explicit name for the container
+    image: api:v1.0          # Use the local image "api:v1.0" for backend
+    expose:
+      - "5000"               # Expose port 5000 internally for the network (use "expose" instead of "port")
+    volumes: 
+      - ./simple_api/student_age.json:/data/student_age.json # Mount JSON file into container
+    networks:
+      - student-list-network # Connect to the same network as "webpage"
+
+# Define a custom bridge network for inter-container communication
+networks:
+  student-list-network:      # Corrected name to be consistent
+    driver: bridge           # Use the bridge driver (default)
